@@ -122,10 +122,6 @@ function onForceOfflineCallback() {
  * 失去网络连接超时回调
  */
 function onRoomDisconnect(errMsg) {
-    g_localRender.freeRender();
-    for (i in g_renders) {
-        g_renders[i].freeRender();
-    }
     alert("SDK已自动退出房间,原因: " + errMsg.code + " " + errMsg.desc);
     toastr.warning("SDK已自动退出房间,原因: " + errMsg.code + " " + errMsg.desc);
 }
@@ -172,8 +168,6 @@ function onLoginErr(errMsg) {
 function onQuitRoomSuc() {
     //清理g_roomnum
     initState();
-    //清理渲染器
-    freeAllRender();
     toastr.success("退出房间成功.");
 }
 
@@ -261,26 +255,76 @@ function onRoomEvent(roomevent) {
                 break;
             }
         }
-    } else if (roomevent.eventid == E_iLiveRoomEventType.NO_CAMERA_VIDEO) //关闭摄像头
-    {
-        //释放其占用的渲染器
-        for (i in g_renders) {
-            if (g_renders[i].getIdentifer() == roomevent.identifier) {
-                g_renders[i].freeRender();
-                break;
-            }
-        }
     }
     else if (roomevent.eventid == E_iLiveRoomEventType.HAS_SCREEN_VIDEO)//打开屏幕分享
     {
         g_screenRender.setAuxRoadVideo(true);
     }
-    else if (roomevent.eventid == E_iLiveRoomEventType.NO_SCREEN_VIDEO)//关闭屏幕分享
-    {
-        g_screenRender.freeRender();
-    }
 }
 
+function onDeviceOperation(oper, code) {
+    if (oper == E_iLiveOperType.Open_Camera) {
+        if (code != 0) {
+            toastr.warning("打开摄像头失败; 错误码:" + code);
+        }else{
+            g_localRender.setIdentifer(g_id);
+            StatusManager.setCamera(1);//更新状态
+        }
+    }
+    else if (oper == E_iLiveOperType.Close_Camera) {
+        if (code != 0) {
+            toastr.warning("关闭摄像头失败; 错误码:" + code);
+        }
+        else {
+            StatusManager.setCamera(0);//更新状态
+        }
+    }
+    else if (oper == E_iLiveOperType.Open_Mic) {
+        if (code != 0) {
+            toastr.warning("打开麦克风失败; 错误码:" + code);
+        } else {
+            toastr.success("打开麦克风成功.");
+            StatusManager.setMic(1);//更新状态
+        }
+    }
+    else if (oper == E_iLiveOperType.Close_Mic) {
+        if (code != 0) {
+            toastr.warning("关闭麦克风失败; 错误码:" + code);
+        } else {
+            toastr.success("关闭麦克风成功.");
+            StatusManager.setMic(0);//更新状态
+        }
+    }
+    else if (oper == E_iLiveOperType.Open_Player) {
+        if (code != 0) {
+            toastr.warning("打开扬声器失败; 错误码:" + code);
+        } else {
+            toastr.success("打开扬声器成功.");
+            StatusManager.setPlayer(1);//更新状态
+        }
+    }
+    else if (oper == E_iLiveOperType.Close_Player) {
+        if (code != 0) {
+            toastr.warning("关闭扬声器失败; 错误码:" + code);
+        } else {
+            toastr.success("关闭扬声器成功.");
+            StatusManager.setPlayer(0);//更新状态
+        }
+    }
+    else if (oper == E_iLiveOperType.Open_Screen_Share) {
+        if (code != 0) {
+            toastr.warning("打开屏幕分享出错; 错误码:" + code);
+        }
+        else{
+            g_screenRender.setAuxRoadVideo(true);
+        }
+    }
+    else if (oper == E_iLiveOperType.Close_ScreenShare) {
+        if (code != 0 && code != 8024) { //8024错误码，表示已经处于关闭状态了
+            toastr.warning("关闭屏幕分享出错; 错误码:" + code);
+        }
+    }
+}
 
 function OnInit() {
     consoleLog("OnInit");
@@ -298,15 +342,12 @@ function OnInit() {
             sdk.setForceOfflineListener(onForceOfflineCallback);
             sdk.setRoomDisconnectListener(onRoomDisconnect);
             sdk.setRoomEventListener(onRoomEvent);
+            sdk.setDeviceOperationCallback(onDeviceOperation);
 
             document.getElementById("version").innerHTML = sdk.version();
-            sdk.setC2CListener(function(msg) {
+            sdk.setMessageListener(function(msg) {
                 showMessage(msg);
             });
-            sdk.setGroupListener(function(msg) {
-                showMessage(msg);
-            });
-
         },
         function(errMsg) {
             toastr.warning("初始化失败! 错误码: " + errMsg.code + "描述: " + errMsg.desc);
@@ -326,17 +367,7 @@ function showMessage(msg) {
 
 //反初始化
 function OnUninit() {
-    freeAllRender();
     sdk.unInit();
-}
-
-//释放所有渲染器
-function freeAllRender() {
-    if(g_localRender) g_localRender.freeRender();
-    if(g_screenRender) g_screenRender.freeRender();
-    for (i in g_renders) {
-        g_renders[i].freeRender();
-    }
 }
 
 function OnBtnReg() {
@@ -384,8 +415,6 @@ function OnBtnLogout(cb) {
                 g_userSig = null;
                 cb();
                 initState();
-                //清理渲染器
-                freeAllRender();
                 toastr.success("logout succ");
                 //更新状态机
                 StatusManager.setLogin(0);
@@ -430,13 +459,11 @@ function OnBtnCreateRoom(cb,rotate) {
         "type": 'live',
         "token": g_token
     };
-    //创建房间先清理一下渲染器，避免不正常退出的画面遗留
-    freeAllRender();
     ajaxPost(g_serverUrl + "?svc=live&cmd=create", JSON.stringify(jsonObj),
         function(rspJson) {
-            sdk.createRoom(rspJson.data.roomnum, "LiveMaster", function() {
+            sdk.createRoom(rspJson.data.roomnum, E_iLiveAuthBits.AuthBit_LiveMaster, "LiveMaster", function() {
                 toastr.success("create room succ");
-                g_role = 1;
+                g_role = E_Role.LiveMaster;
                 g_roomnum = rspJson.data.roomnum;
                 g_groupid = rspJson.data.groupid;
                 jsonObj = {
@@ -503,7 +530,7 @@ function getUserList() {
                     var role = roleList[item.role] ? ('(' + roleList[item.role] + ')') : "";
                     $('#user-list').append('<button type="button" class="list-group-item" data-id="' + item.id + '" data-role="' + item.role + '">' +
                         item.id + role + '</button>');
-                    if (item.role == 2) {
+                    if (item.role == E_Role.LiveGuest) {
                         g_liveGuestCount++;
                     }
                 }
@@ -522,18 +549,18 @@ function OnBtnJoinRoom(roomid, role, succ, err) {
     g_request_status = 1;
     //通过url ？role=2 进来的用户，设置成连麦用户
     if(/role=2/gi.test(location.search)){
-        g_role = 2;
+        g_role = E_Role.LiveGuest;
+    }else{
+        g_role = E_Role.Guest;
     }
 
     var jsonObj = {
         "token": g_token,
         "roomnum": roomid,
-        "role": g_role || 0,
+        "role": g_role || E_Role.Guest,
         "operate": 0,
         "id": g_id
     };
-    //加入房间先清理一下渲染器，避免不正常退出的画面遗留
-    freeAllRender();
     ajaxPost(g_serverUrl + "?svc=live&cmd=reportmemid", JSON.stringify(jsonObj),
         function(rspJson) {
             if (rspJson.errorCode != 0) {
@@ -542,8 +569,8 @@ function OnBtnJoinRoom(roomid, role, succ, err) {
                 return;
             }
 
-
-            sdk.joinRoom(roomid, g_role == 2 ? 'LiveGuest' : "Guest", function() {
+            var authBits = (g_role == E_Role.LiveGuest) ? E_iLiveAuthBits.AuthBit_LiveGuest : E_iLiveAuthBits.AuthBit_Guest;
+            sdk.joinRoom(roomid, authBits, g_role == E_Role.LiveGuest ? 'LiveGuest' : "Guest", function() {
                 g_request_status = 0;
                 toastr.success("join room succ");
                 g_roomnum = roomid;
@@ -555,11 +582,11 @@ function OnBtnJoinRoom(roomid, role, succ, err) {
                 report({
                     "token": g_token,
                     "roomnum": g_roomnum,
-                    "role": g_role || 0,
+                    "role": g_role || E_Role.Guest,
                     "thumbup": 0
                 });
                 getUserList();
-                if (role == 2) {
+                if (role == E_Role.LiveGuest) {
                     sdk.changeRole('LiveGuest', function() {
 
                     });
@@ -579,7 +606,7 @@ function OnBtnJoinRoom(roomid, role, succ, err) {
 function OnBtnQuitRoom(cb) {
     var url = null;
     var param = {};
-    if (g_role == 1) {
+    if (g_role == E_Role.LiveMaster) {
         url = g_serverUrl + "?svc=live&cmd=exitroom",
             param = {
                 "token": g_token,
@@ -592,7 +619,7 @@ function OnBtnQuitRoom(cb) {
                 "token": g_token,
                 "id": g_id,
                 "roomnum": g_roomnum,
-                "role": g_role || 0,
+                "role": g_role || E_Role.Guest,
                 "operate": 1
             }
     }
@@ -602,8 +629,6 @@ function OnBtnQuitRoom(cb) {
                 sdk.quitRoom(function() {
                     toastr.success("quit room succ");
                     initState();
-                    //清理渲染器
-                    freeAllRender();
                     cb();
                 }, function(errMsg) {
                     toastr.error("错误码:" + errMsg.code + " 错误信息:" + errMsg.desc);
@@ -611,7 +636,7 @@ function OnBtnQuitRoom(cb) {
             }
         );
     }
-    if (g_role == 1) {
+    if (g_role == E_Role.LiveMaster) {
         SendGroupMessage({
                 "userAction": E_IM_CustomCmd.AVIMCMD_ExitLive,
                 "actionParam": ''
@@ -622,7 +647,7 @@ function OnBtnQuitRoom(cb) {
 }
 
 function OnBtnOpenCamera() {
-    if (g_role == 0) {
+    if (g_role != E_Role.LiveGuest && g_role != E_Role.LiveMaster) {
         toastr.error('被连麦之后才可以打开摄像头');
         return;
     }
@@ -631,81 +656,43 @@ function OnBtnOpenCamera() {
         toastr.warning("获取摄像头列表出错; 错误码:" + nRet);
         return;
     }
-    ret = sdk.openCamera(nRet.cameras[0].id);
-    if (ret != 0) {
-        toastr.warning("打开摄像头失败; 错误码:" + ret);
-    } else {
-        g_localRender.setIdentifer(g_id);
-
-        //更新状态
-        StatusManager.setCamera(1);
-    }
+    sdk.openCamera(nRet.devices[0].id);
 }
 
 function OnBtnCloseCamera() {
-    if (g_role == 0) {
-        return toastr.error('被连麦之后才可以关闭摄像头');
-    }
-    var nRet = sdk.closeCamera();
-    if (nRet != 0) {
-        toastr.warning("关闭摄像头失败; 错误码:" + nRet);
-    } else {
-        g_localRender.freeRender();
-        //更新状态
-        StatusManager.setCamera(0);
-    }
-    // 销毁美颜滤镜资源
-    sdk.destroyFilter();
+    sdk.closeCamera();
 }
 
 function OnBtnOpenMic() {
-    if (g_role == 0) {
+    if (g_role != E_Role.LiveGuest && g_role != E_Role.LiveMaster) {
         return toastr.error('被连麦之后才可以打开麦克风');
     }
-    var nRet = sdk.openMic();
-    if (nRet != 0) {
-        toastr.warning("打开麦克风失败; 错误码:" + nRet);
-    } else {
-        toastr.success("打开麦克风成功.");
-        //更新状态
-        StatusManager.setMic(1);
+    var nRet = sdk.getMicList();
+    if (nRet.code != 0) {
+        toastr.warning("获取麦克风列表出错; 错误码:" + nRet);
+        return;
     }
+    sdk.openMic(nRet.devices[0].id);
 }
 
 function OnBtnCloseMic() {
-    if (g_role == 0) {
+    if (g_role != E_Role.LiveGuest && g_role != E_Role.LiveMaster) {
         return toastr.error('被连麦之后才可以关闭麦克风');
     }
-    var nRet = sdk.closeMic();
-    if (nRet != 0) {
-        toastr.warning("关闭麦克风失败; 错误码:" + nRet);
-    } else {
-        toastr.success("关闭麦克风成功.");
-        //更新状态
-        StatusManager.setMic(0);
-    }
+    sdk.closeMic();
 }
 
 function OnBtnOpenPlayer() {
-    var nRet = sdk.openSpeaker();
-    if (nRet != 0) {
-        toastr.warning("打开扬声器失败; 错误码:" + nRet);
-    } else {
-        toastr.success("打开扬声器成功.");
-        //更新状态
-        StatusManager.setPlayer(1);
+    var nRet = sdk.getSpeakerList();
+    if (nRet.code != 0) {
+        toastr.warning("获取扬声器列表出错; 错误码:" + nRet);
+        return;
     }
+    sdk.openSpeaker(nRet.devices[0].id);
 }
 
 function OnBtnClosePlayer() {
-    var nRet = sdk.closeSpeaker();
-    if (nRet != 0) {
-        toastr.warning("关闭扬声器失败; 错误码:" + nRet);
-    } else {
-        toastr.success("关闭扬声器成功.");
-        //更新状态
-        StatusManager.setPlayer(0);
-    }
+    sdk.closeSpeaker();
 }
 
 function OnBtnSendGroupMessage(msg, succ, err) {
@@ -857,15 +844,15 @@ function dealCustomMessage(user, msg) {
             $('#invitedBox').modal('show');
             break;
         case E_IM_CustomCmd.AVIMCMD_Multi_CancelInteract:
-            if (g_role != 1) {
+            if (g_role != E_Role.LiveMaster) {
                 sdk.changeRole('Guest', function() {
                     toastr.warning("被主播下麦");
                     OnBtnCloseCamera();
-                    g_role = 0;
+                    g_role = E_Role.Guest;
                     report({
                         "token": g_token,
                         "roomnum": g_roomnum,
-                        "role": g_role || 0,
+                        "role": g_role || E_Role.Guest,
                         "thumbup": 0
                     });
                     getUserList();

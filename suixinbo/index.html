@@ -24,7 +24,7 @@
 
 <body onload="OnInit()" onunload="OnUninit()">
     <div style="width:1px;height:1px">
-        <object id="iLiveSDKCom" classid="CLSID:54E71417-216D-47A2-9224-C991A099C531" codebase="./iLiveSDK.cab#version=1,1,1,0"></object>
+        <object id="iLiveSDKCom" classid="CLSID:54E71417-216D-47A2-9224-C991A099C531" codebase="./iLiveSDK.cab#version=1,2,0,0"></object>
     </div>
     <nav class="navbar alert-info">
         <div class="container-fluid">
@@ -215,7 +215,7 @@
     </script>
     <script id="wnd-tpl" type="text/html">
         {{ each list as item}}
-        <option value="{{item.id}}">{{ item.title }}</option>
+        <option value="{{item.id}}">{{ item.name }}</option>
         {{ /each }}
     </script>
     <script>
@@ -365,17 +365,16 @@
                 alert("获取窗口列表出错; 错误码:" + ret.code);
                 return;
             }
-            if (ret.wnds.length == 0) {
+            if (ret.devices.length == 0) {
                 alert("没有可供分享的窗口");
                 return;
             }
-            var html = template("wnd-tpl",{list : ret.wnds});
+            var html = template("wnd-tpl",{list : ret.devices});
             $("#share_wnd").html(html);
         };
 
 
         function OnBtnOpenScreenShareWnd() {
-
             if (g_role == 0) {
                 toastr.error('被连麦之后才可以打开屏幕分享');
                 return;
@@ -386,17 +385,14 @@
             }
             if(g_screenRender){
                 sdk.closeScreenShare();
-                g_screenRender.freeRender();
             }
             //切换的时候free需要时间，做一个settimeout
             setTimeout(function(){
-                var nRet = sdk.openScreenShareWnd( $("#share_wnd").val());  //这里直接写死为分享获取到的第一个窗口
-                g_screenRender.setAuxRoadVideo(true);
+                sdk.openScreenShareWnd( $("#share_wnd").val());  //这里直接写死为分享获取到的第一个窗口
             },100)
         };
 
         function OnBtnOpenScreenShareArea() {
-
             if (g_role == 0) {
                 toastr.error('被连麦之后才可以打开屏幕分享');
                 return;
@@ -407,21 +403,13 @@
             var y1 = $("#y1").val();
             if(g_screenRender){
                 sdk.closeScreenShare();
-                g_screenRender.freeRender();
             }
             //切换的时候free需要时间，做一个settimeout
             setTimeout(function(){
-                var nRet = sdk.openScreenShareArea(x0, y0, x1, y1);
-                if (nRet != 0) {
-                    alert("打开屏幕分享失败,错误码: "+nRet);
-                }
-                else {
-                    g_screenRender.setAuxRoadVideo(true);
-                }
+                sdk.openScreenShareArea(x0, y0, x1, y1);
             },100)
         };
         function OnBtnChangeScreenShareSize() {
-
             if (g_role == 0) {
                 toastr.error('被连麦之后才可以打开屏幕分享');
                 return;
@@ -440,13 +428,7 @@
                 toastr.error('被连麦之后才可以打开屏幕分享');
                 return;
             }
-            var nRet = sdk.closeScreenShare();
-            if (nRet != 0) {
-                alert("关闭屏幕分享失败,错误码: "+nRet);
-            }
-            else {
-                g_screenRender.freeRender();
-            }
+            sdk.closeScreenShare();
         };
 
         $('#invitedNo').on('click', function(e) {
