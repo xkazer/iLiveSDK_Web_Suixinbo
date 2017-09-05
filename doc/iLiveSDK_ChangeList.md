@@ -11,7 +11,7 @@
 * 增加浏览器检测功能，如果浏览器版本不支持，初始化会失败，并弹窗提醒;
 * 增加设备插拔监听接口;
 * 增加设备测试接口(进入房间之前，打开麦克风、扬声器、摄像头进行设备测试);
-* SDK内部状态优化;
+* SDK内部状态优化;<br/>
 注意: iLiveSDK 1.2.0.0对接口做了一些小改动,请参考[升级指引](https://github.com/zhaoyang21cn/iLiveSDK_Web_Suixinbo/blob/master/iLiveSDK/README.md)
 
 ###### V1.1.1.0(2017-06-26)
