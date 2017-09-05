@@ -20,7 +20,7 @@
 
 5. 调用sdk的接口
 
-API接口文档可以[在线查看](https://zhaoyang21cn.github.io/ilivesdk_help/web_help/),也可以直接查看iLiveSDK.js文件内的注释;
+API接口文档可以[在线查看](https://zhaoyang21cn.github.io/iLiveSDK_Help/web_help/),也可以直接查看iLiveSDK.js文件内的注释;
 
 ## 注意事项
 * 引入cab文件时要填写版本号，以后更新iLiveSDK，只需替换cab和js文件，修改此处版本号，用户打开页面，会提示安装新版本cab文件;
