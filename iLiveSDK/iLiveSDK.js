@@ -41,6 +41,12 @@
 */
 
 /**
+* iliveSDK直播质量回调
+* @callback ILiveSDK~iliveQualityParamCallback
+* @param {json} param 直播质量参数,各个字段含义见https://github.com/zhaoyang21cn/iLiveSDK_Web_Suixinbo/blob/master/doc/iLiveSDK_QualityParam.md
+*/
+
+/**
 * ILiveSDK
 * @constructor
 * @throws iliveSDKObj不存在时抛出异常
@@ -98,6 +104,30 @@ ILiveSDK.prototype = {
     */
     setIMSupport: function (imSupport) {
         this.ilive.setIMSupport(imSupport);
+    },
+
+    /**
+    * 设置房间内直播质量回调接口
+    * @param {ILiveSDK~iliveQualityParamCallback} listener - 监听函数
+    * @description 调用此接口设置回调后，进入房间就会每隔1秒通知一次业务层房间内相关参数情况
+    */
+    setQualityParamCallback: function (listener) {
+        this.ilive.setQualityParamCallback( function(szRet){
+            if (listener) {
+                var obj = JSON.parse(szRet);
+                if (obj.videoEncodeParams == null) {
+                    obj.videoEncodeParams = new Array();
+                }
+                if (obj.videoDecodeParams == null) {
+                    obj.videoDecodeParams = new Array();
+                }
+                if (obj.audioDecodeParams == null) {
+                    obj.audioDecodeParams = new Array();
+                }
+                listener(obj);
+            }
+        }
+        );
     },
 
     /**
