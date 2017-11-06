@@ -14,8 +14,15 @@ sdk仅支持32位IE8、32位IE9、32位IE10、32位和64位IE11，请检查IE是
 
 ## 如何让渲染画面没有黑边
 
-将渲染控件的宽高比设置成和视频画面宽高比一致，比如，SPEAR上配置的画面分辨率是1280*720(16:9),渲染控件的宽高可以设置成如下，
+1. 将渲染控件的宽高比设置成和视频画面宽高比一致，比如，SPEAR上配置的画面分辨率是1280*720(16:9),渲染控件的宽高可以设置成如下，
 
 ```html
 <object id="render" classid="CLSID:1EA15A99-7F53-4B6F-8947-B57A0729918E" width="160" height="90"/>
 ```
+
+2. 设置渲染器的渲染模式为拉伸方式,代码如下,
+
+```js
+g_localRender.setRenderMode(E_iLiveRenderMode.RenderMode_FullWnd);
+```
+
