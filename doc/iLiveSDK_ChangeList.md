@@ -3,7 +3,7 @@
 ###### V1.4.0.0(2017-11-08)
 * 解决初始化报8002错误时需要将域名添加到信任站点问题;
 * 增加手动录制接口;
-* 停止推流接口可以指定主路还是辅路(注意: 这里有接口改动，见[改动说明](https://github.com/zhaoyang21cn/iLiveSDK_Web_Suixinbo/blob/master/iLiveSDK/README.md));
+* 停止推流接口增加参数，用于指定主路还是辅路(这里有接口改动，见[升级指引](https://github.com/zhaoyang21cn/iLiveSDK_Web_Suixinbo/blob/master/iLiveSDK/README.md));
 
 ###### V1.3.1.0(2017-11-01)
 * SDK运行目录下会生成大量stats_report_pb_file_name_1509354510类型文件----bug修正;
