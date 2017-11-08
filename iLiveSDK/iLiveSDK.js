@@ -639,13 +639,55 @@ ILiveSDK.prototype = {
    /**
     * 结束推流
     * @param {number} channelID - 流ID
+    * @param {E_iLivePushDataType} pushDataType - 要停止推流的数据类型
     * @param {ILiveSDK~iliveSucCallback} suc - 成功回调
     * @param {ILiveSDK~iliveErrCallback} err - 失败回调
     */
-    stopPushStream: function (channelID, suc, err) {
-        this.ilive.stopPushStream(channelID, function () {
+    stopPushStream: function (channelID, pushDataType, suc, err) {
+        this.ilive.stopPushStream(channelID, pushDataType, function () {
             if (suc) {
                 suc();
+            }
+        }, function (msg) {
+            if (err) {
+                var obj = JSON.parse(msg);
+                err(obj);
+            }
+        });
+    },
+
+    /**
+    * 开始录制
+    * @param {ILiveRecordOption} option - 录制参数
+    * @param {ILiveSDK~iliveSucCallback} suc - 成功回调
+    * @param {ILiveSDK~iliveErrCallback} err - 失败回调
+    */
+    startRecord: function (option, suc, err) {
+        if (option instanceof ILiveRecordOption) {
+            this.ilive.startRecord(JSON.stringify(option), function () {
+                if (suc) {
+                    suc();
+                }
+            }, function (msg) {
+                if (err) {
+                    var obj = JSON.parse(msg);
+                    err(obj);
+                }
+            });
+        }
+    },
+
+    /**
+    * 结束录制
+    * @param {E_iLiveRecordDataType} recordDataType - 要停止录制的数据类型
+    * @param {ILiveSDK~iliveSucCallback} suc - 成功回调,返回录制的视频文件id列表;
+    * @param {ILiveSDK~iliveErrCallback} err - 失败回调
+    */
+    stopRecord: function (recordDataType, suc, err) {
+        this.ilive.stopRecord(recordDataType, function (msg) {
+            if (suc) {
+                var obj = JSON.parse(msg);
+                suc(obj);
             }
         }, function (msg) {
             if (err) {
@@ -843,7 +885,7 @@ ILiveRender.prototype = {
 }
 
 /**
-* 直播码推流录制参数
+* 旁路推流参数
 * @class
 * @constructor
 * @param {E_iLivePushDataType} dataType - 推流数据类型
@@ -854,6 +896,18 @@ function ILivePushStreamOption(dataType, encode, fileType) {
     this.dataType = dataType;
     this.encode = encode;
     this.fileType = fileType;
+}
+
+/**
+* 录制参数
+* @class
+* @constructor
+* @param {E_iLiveRecordDataType} dataType - 录制的数据类型
+* @param {string} fileName - 录制后的文件名
+*/
+function ILiveRecordOption(dataType, fileName) {
+    this.dataType = dataType;
+    this.fileName = fileName;
 }
 
 /**
@@ -894,6 +948,18 @@ var E_iLiveRoomEventType = {
  * @enum {number}
  */
 var E_iLivePushDataType = {
+    /** 摄像头 */
+    CAMERA: 0,
+    /** 辅路 */
+    SCREEN: 1,
+};
+
+/**
+ * 录制数据类型
+ * @readonly
+ * @enum {number}
+ */
+var E_iLiveRecordDataType = {
     /** 摄像头 */
     CAMERA: 0,
     /** 辅路 */
