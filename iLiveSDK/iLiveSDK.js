@@ -1,5 +1,3 @@
-
-
 /**
 * iliveSDK成功回调
 * @callback ILiveSDK~iliveSucCallback
@@ -44,6 +42,33 @@
 * iliveSDK直播质量回调
 * @callback ILiveSDK~iliveQualityParamCallback
 * @param {json} param 直播质量参数,各个字段含义见https://github.com/zhaoyang21cn/iLiveSDK_Web_Suixinbo/blob/master/doc/iLiveSDK_QualityParam.md
+*/
+
+/**
+* iliveSDK本地视频录制过程中发生错误的回调通知:<br/>
+* 开启录制之后，在录制过程中发生错误，会回调这个方法, 并自动停止录制。
+* @callback ILiveSDK~iliveLocalRecordErrorCallback
+* @param {number} result - 错误码
+* @param {string} errInf - 错误信息
+*/
+
+/**
+* iliveSDK本地视频录制文件生成回调:<br/>
+* 开启录制之后，录制过程中完成一个MP4文件的录制，即回调这个方法。<br/>
+* 录制过程中有可能产生多个MP4文件, 即录制过程中可能会有多次iliveLocalRecordedCallback回调。<br/>
+* 产生多个MP4文件是必要的, 原因是:<br/>
+* 1. SDK由于性能考虑，没有进行二次编码，而是直接将通话中的上行码流dump下来转成MP4。<br/>
+* 2. 由于通话过程中切角色, 视频参数有可能会变化，导致h264 sps pps发生改变(主要为视频分辨率改变)，从而必须重新保存。<br/>
+* 3. 特别的，由于通话过程中，屏幕分享区域变化，导致h264 sps pps发生改变(主要为视频分辨率改变)，从而必须重新保存。<br/>
+* 4. 考虑到码流转换mp4的时间和空间效率问题，单个文件最大时长为1小时，超过则重新保存。<br/>
+* 5. 摄像头和屏幕分享会同时录制保存，也会分开录制保存，摄像头MP4文件名以"main"开头，屏幕分享MP4文件名以"sub"开头<br/>
+* 6. 音频会固定转码为标准ACC (sample rate: 48000, channel: 2, bitrate: 64000),不会造成重新生成MP4的问题。<br/>
+* 所以，建议业务侧尽量使用固定分辨率，固定码率等参数，避免mp4文件保存个数过多。
+* @callback ILiveSDK~iliveLocalRecordedCallback
+* @param {number} duration - mp4文件时长，单位秒。单个MP4文件最大时长为1小时。
+* @param {number} width - mp4文件视频图像宽度。
+* @param {number} height - mp4文件视频图像高度。
+* @param {string} filePath - mp4文件路径。
 */
 
 /**
@@ -107,9 +132,9 @@ ILiveSDK.prototype = {
     },
 
     /**
-    * 设置房间内直播质量回调接口
+    * 设置房间内直播质量回调接口<br/>
+    * 调用此接口设置回调后，进入房间就会每隔1秒通知业务层房间内相关参数情况
     * @param {ILiveSDK~iliveQualityParamCallback} listener - 监听函数
-    * @description 调用此接口设置回调后，进入房间就会每隔1秒通知一次业务层房间内相关参数情况
     */
     setQualityParamCallback: function (listener) {
         this.ilive.setQualityParamCallback( function(szRet){
@@ -552,10 +577,10 @@ ILiveSDK.prototype = {
     },
 
     /**
-    * 设置与房间断开连接的监听函数
-    * @param {ILiveSDK~iliveErrCallback} listener - 监听函数
-    * @description 在一些异常情况下，sdk会自动退出房间，如断网超时未能自动重连成功等。
+    * 设置与房间断开连接的监听函数<br/>
+    * 在一些异常情况下，sdk会自动退出房间，如断网超时未能自动重连成功等。<br/>
     * 收到此回调后,sdk已自动退出房间，重新连上网后，需重新进入房间;
+    * @param {ILiveSDK~iliveErrCallback} listener - 监听函数
     */
     setRoomDisconnectListener: function(listener)
     {
@@ -697,6 +722,38 @@ ILiveSDK.prototype = {
         });
     },
 
+    /**
+    * 开始本地视频录制;<br/>
+    * 开始本地视频录制后，自己的摄像头和屏幕分享及音频数据，会录制成mp4文件存放到本地;<br/> 
+    * 在登录后，即可调用此接口，进入房间后，打开摄像头或者屏幕分享的画面都会自动录制成本地文件;
+    * @param {string} dstDir - 录制文件存放的路径,如"D:/";请确保输入路径是有效的，否则会回调errorCallback并停止录制;
+    * @param {ILiveSDK~iliveLocalRecordedCallback} recordCallback - 保存单个录制MP4文件时的回调通知, 和是否停止录制MP4无关;
+    * @param {ILiveSDK~iliveLocalRecordErrorCallback} errorCallback - 录制过程中发生错误的回调通知;
+    */
+    startLocalRecord: function(dstDir, recordCallback, errorCallback) {
+        this.ilive.startLocalRecord(dstDir, function(msg) {
+            var obj = JSON.parse(msg);
+            if (obj.result == 0) {
+                if(recordCallback)
+                {
+                    recordCallback(obj.duration, obj.width, obj.height, obj.filePath);
+                }
+            }else {
+                if(errorCallback)
+                {
+                    errorCallback(obj.result, obj.errInf);
+                }
+            }
+        });
+    },
+
+    /**
+    * 停止本地视频录制
+    */
+    stopLocalRecord: function() {
+        this.ilive.stopLocalRecord();
+    },
+
    /**
     * 设置美颜程度
     * @param {number} beauty - 美颜程度 0~7
@@ -824,8 +881,8 @@ function ILiveRender(iliveRenderObj) {
 
 ILiveRender.prototype = {
     /**
-    * 设置渲染器绑定的用户id。
-    * @description 渲染器绑定id后，将会开始渲染绑定用户的视频画面;
+    * 设置渲染器绑定的用户id<br/>
+    * 渲染器绑定id后，将会开始渲染绑定用户的视频画面;
     * @param {string} identifer - 用户id
     */
     setIdentifer: function (identifer) {
@@ -849,8 +906,8 @@ ILiveRender.prototype = {
     },
 
     /**
-    * 视频帧截图.
-    * @description 对渲染器的当前画面进行截图.
+    * 视频帧截图.<br/>
+    * 对渲染器的当前画面进行截图.
     * @returns {string} 截图的base64编码数据,如果截图失败，返回空字符串;
     */
     snapShot: function () {
@@ -858,10 +915,10 @@ ILiveRender.prototype = {
     },
 
     /**
-    * 设置是否为辅路视频渲染器.
-    * @param {boolean} bAuxRoad - 是否为辅路视频渲染器.
-    * @description 屏幕分享通过辅路流进行传输; 将渲染器设置为辅路视频渲染器，将会渲染屏幕分享的画面;
+    * 设置是否为辅路视频渲染器.<br/>
+    * 屏幕分享通过辅路流进行传输; 将渲染器设置为辅路视频渲染器，将会渲染屏幕分享的画面;<br/>
     * 设置辅路视频渲染器后，不需要设置此渲染器的identifier了，因为一个房间内只有一路辅流，即同一时刻只能一个用户占用;
+    * @param {boolean} bAuxRoad - 是否为辅路视频渲染器.
     */
     setAuxRoadVideo: function (bAuxRoad) {
         return this.render.setAuxRoadVideo(bAuxRoad);
