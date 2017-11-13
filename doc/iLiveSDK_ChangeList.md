@@ -1,7 +1,7 @@
 ## Web_iLiveSDK_ChangeList
 
 ###### V1.4.1.0(2017-11-13)
-* 增加本地视频录制接口;
+* 增加本地视频录制接口,[使用说明](https://github.com/zhaoyang21cn/iLiveSDK_Web_Suixinbo/blob/master/doc/localRecord.md);
 
 ###### V1.4.0.0(2017-11-08)
 * 解决初始化报8002错误时需要将域名添加到信任站点问题;
