@@ -18,7 +18,7 @@ web版随心播能够和PC、Android、IOS互通;
 
 ## 相关知识
 [角色配置](https://www.qcloud.com/document/product/268/10620)<br/>
-[如何录制混流视频](https://www.qcloud.com/document/product/268/10526)
+[如何录制混流视频](https://www.qcloud.com/document/product/268/10526)<br/>
 [本地视频录制](https://github.com/zhaoyang21cn/iLiveSDK_Web_Suixinbo/blob/master/doc/localRecord.md)
 
 ## 关键路径LOG
