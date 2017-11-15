@@ -1,5 +1,8 @@
 ## Web_iLiveSDK_ChangeList
 
+###### V1.4.1.1(2017-11-15)
+* 房间内一个人关闭屏幕分享，另一个人再打开屏幕分享，还是显示前面一个人的屏幕分享最后一帧画面----bug修正
+
 ###### V1.4.1.0(2017-11-13)
 * 增加本地视频录制接口,[使用说明](https://github.com/zhaoyang21cn/iLiveSDK_Web_Suixinbo/blob/master/doc/localRecord.md);
 
