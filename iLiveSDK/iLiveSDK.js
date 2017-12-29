@@ -1031,7 +1031,6 @@ var E_iLiveRecordDataType = {
 var E_iLivePushEncode = {
     HLS: 0x1,
     FLV: 0x2,
-    HLS_AND_FLV: 0x3,
     RAW: 0x4,
     RTMP: 0x5,
     HLS_AND_RTMP: 0x6,
