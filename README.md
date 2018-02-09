@@ -2,8 +2,14 @@
 iLiveSDK 提供了账号登录，音视频互动，文本互动等基础功能，可快速集成音视频能力(目前仅支持IE)。
 
 ## iLiveSDK集成
-[iLiveSDK导入参考](https://github.com/zhaoyang21cn/iLiveSDK_Web_Suixinbo/blob/master/doc/iLiveSDK_README.md)<br/>
-[版本更新说明](https://github.com/zhaoyang21cn/iLiveSDK_Web_Suixinbo/blob/master/doc/iLiveSDK_ChangeList.md)
+[iLiveSDK导入参考](https://github.com/zhaoyang21cn/iLiveSDK_Web_Suixinbo/blob/master/doc/iLiveSDK_README.md)
+
+## SDK最近更新说明
+### V1.5.0.1(2018-02-09)
+* 获取设备列表为空时，统一返回错误码ERR_NOT_FOUND(8022);
+* SDK内部优化;
+
+[更多版本更新信息](https://github.com/zhaoyang21cn/iLiveSDK_Web_Suixinbo/blob/master/doc/iLiveSDK_ChangeList.md)
 
 ## DEMO
 web版随心播能够和PC、Android、IOS互通;  
