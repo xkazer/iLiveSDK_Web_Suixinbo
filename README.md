@@ -5,9 +5,8 @@ iLiveSDK 提供了账号登录，音视频互动，文本互动等基础功能�
 [iLiveSDK导入参考](https://github.com/zhaoyang21cn/iLiveSDK_Web_Suixinbo/blob/master/doc/iLiveSDK_README.md)
 
 ## SDK最近更新说明
-### V1.6.0.0(2018-04-18)
-* SDK内部升级到avsdk 1.9.8;
-* 断网退出房间，摄像头未关闭，bug修复;
+### V1.7.1.0(2018-06-28)
+* 修正sdk对vs2015运行时的依赖;
 
 [更多版本更新信息](https://github.com/zhaoyang21cn/iLiveSDK_Web_Suixinbo/blob/master/doc/iLiveSDK_ChangeList.md)
 
