@@ -156,6 +156,22 @@ ILiveSDK.prototype = {
     },
 
     /**
+    * 设置通道类型。<br/>
+    * 老用户(2018年07月09日前接入的用户)需要调用本接口设置为E_ChannelMode.E_ChannelIMSDK，才能和旧版本(1.9.0.0之前的版本)互通;
+    * 默认通道为E_ChannelMode.E_ChannelIMRestAPI,此通道在进房间时,必须填写tls加密版本的privateMapKey,privateMapKey生成规则参考: https://cloud.tencent.com/document/product/454/16914 文档中privateMapKey的计算方法;
+    * 注意: 此接口必须在登录之前调用，否则无效。
+    * @param {E_ChannelMode}    mode - 通道类型
+    * @param {string}           host - 自定义域名(目前此参数无效,可不填);
+    */
+    setChannelMode: function(mode, host)
+    {
+        if (host === undefined) {
+            host = "";
+        }
+        this.ilive.setChannelMode(mode, host);
+    },
+
+    /**
     * 将初始化iliveSDK.
     * @param {ILiveSDK~iliveSucCallback} suc - 成功回调
     * @param {ILiveSDK~iliveErrCallback} err - 失败回调
@@ -273,19 +289,20 @@ ILiveSDK.prototype = {
     * 创建房间
     * @param {number} roomID - 房间ID
     * @param {E_iLiveAuthBits} authBits - 角色权限位
+    * @param {string} privateMapKey - 通话能力权限位的加密串
     * @param {string} controlRole - 角色
     * @param {ILiveSDK~iliveSucCallback} suc - 成功回调
     * @param {ILiveSDK~iliveErrCallback} err - 失败回调
     * @param {boolean} model - 是否竖屏开播; false: 否 true: 是; 如果createRoom 不传该参数，默认false横屏
     */ 
-    createRoom: function (roomID, authBits, controlRole, suc, err, model) {
+    createRoom: function (roomID, authBits, privateMapKey, controlRole, suc, err, model) {
         var rotate = -1;
         if (true == model){
             rotate = 3; // 3 代表旋转 270度；-1代表不旋转 
         }else{
             rotate = 0; // 0 代表不旋转
         }
-        this.ilive.createRoom(roomID, authBits, controlRole, function () {
+        this.ilive.createRoom(roomID, authBits, privateMapKey, controlRole, function () {
             if (suc) {
                 suc();
             }
@@ -301,12 +318,13 @@ ILiveSDK.prototype = {
     * 加入房间
     * @param {number} roomID - 房间ID
     * @param {E_iLiveAuthBits} authBits - 角色权限位
+    * @param {string} privateMapKey - 通话能力权限位的加密串
     * @param {string} controlRole - 角色
     * @param {ILiveSDK~iliveSucCallback} suc - 成功回调
     * @param {ILiveSDK~iliveErrCallback} err - 失败回调
     */
-    joinRoom: function (roomID, authBits, controlRole, suc, err) {
-        this.ilive.joinRoom(roomID, authBits, controlRole, function () {
+    joinRoom: function (roomID, authBits, privateMapKey, controlRole, suc, err) {
+        this.ilive.joinRoom(roomID, authBits, privateMapKey, controlRole, function () {
             if (suc) {
                 suc();
             }
@@ -1101,4 +1119,16 @@ var E_iLiveAuthBits = {
     AuthBit_LiveGuest: 0xFFFFFFFE,
     /** 普通观众权限位(只有下行数据权限) */
     AuthBit_Guest: 0x000000AA,
+};
+
+/**
+ * sdk通信通道类型
+ * @readonly
+ * @enum {number}
+ */
+var E_ChannelMode = {
+    /** IMSDKRestAPI通道,必须在进房时带上tls加密版本的AuthBuffer(默认) */
+    E_ChannelIMRestAPI: 0,
+    /** IMSDK通道(iLiveSDK 1.9.0.0之前的版本所用的通道) */
+    E_ChannelIMSDK: 1,
 };
