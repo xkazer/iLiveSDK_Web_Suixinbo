@@ -1127,7 +1127,7 @@ var E_iLiveAuthBits = {
  * @enum {number}
  */
 var E_ChannelMode = {
-    /** IMSDKRestAPI通道,必须在进房时带上tls加密版本的AuthBuffer(默认) */
+    /** IMSDKRestAPI通道,必须在进房时带上tls加密版本的privateMapKey(默认) */
     E_ChannelIMRestAPI: 0,
     /** IMSDK通道(iLiveSDK 1.9.0.0之前的版本所用的通道) */
     E_ChannelIMSDK: 1,
