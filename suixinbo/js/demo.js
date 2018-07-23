@@ -9,7 +9,6 @@ var g_roomnum = null;
 var g_groupid = null;
 var g_role = null;
 var g_id = null;
-var g_pwd= null;
 var g_getUserList = null;
 var g_invite = null;
 var g_liveGuestCount = 0; //连麦用户总数
@@ -346,7 +345,8 @@ function OnInit() {
             sdk.setRoomDisconnectListener(onRoomDisconnect);
             sdk.setRoomEventListener(onRoomEvent);
             sdk.setDeviceOperationCallback(onDeviceOperation);
-
+			sdk.setChannelMode(E_ChannelMode.E_ChannelIMSDK);
+			
             document.getElementById("version").innerHTML = sdk.version();
             sdk.setMessageListener(function(msg) {
                 showMessage(msg);
@@ -401,7 +401,6 @@ function OnBtnLogin() {
             g_token = rspJson.data.token;
             g_userSig = rspJson.data.userSig;
             g_id = id;
-			g_pwd = pwd;
             var sig = rspJson.data.userSig;
             sdk.login(id, sig, onLoginSuc, onLoginErr);
         }
@@ -464,52 +463,42 @@ function OnBtnCreateRoom(cb,rotate) {
         "token": g_token
     };
     ajaxPost(g_serverUrl + "?svc=live&cmd=create", JSON.stringify(jsonObj),
-        function(createRoomRspJson) {
-			//从业务服务器获取privateMapKey
-			var jsonObj = { "identifier": g_id, "pwd": g_pwd, "appid": g_sdkappid, "accounttype": g_accountType, "roomnum": createRoomRspJson.data.roomnum, "privMap": 255 };
-			ajaxPost(g_serverUrl + "?svc=account&cmd=authPrivMap", JSON.stringify(jsonObj),
-				function OnServerAuthPrivMap(privateMapKeyRspJson) {
-					g_userSig = privateMapKeyRspJson.data.userSig;
-					g_token = privateMapKeyRspJson.data.token;
-					var privateMapKey = privateMapKeyRspJson.data.privMapEncrypt;
-					
-					sdk.createRoom(createRoomRspJson.data.roomnum, E_iLiveAuthBits.AuthBit_LiveMaster, privateMapKey, "LiveMaster", function() {
-						toastr.success("create room succ");
-						g_role = E_Role.LiveMaster;
-						g_roomnum = createRoomRspJson.data.roomnum;
-						g_groupid = createRoomRspJson.data.groupid;
-						jsonObj = {
-							"token": g_token,
-							"room": {
-								"title": '[Web随心播]' + name,
-								"roomnum": createRoomRspJson.data.roomnum,
-								"type": "live",
-								"groupid": createRoomRspJson.data.groupid,
-								"appid": g_appId,
-								"device": 2,
-								"videotype": 0
-							}
-						};
-						ajaxPost(g_serverUrl + "?svc=live&cmd=reportroom", JSON.stringify(jsonObj),
-							function(reportRoomRspJson) {
-								cb(g_roomnum);
-								report({
-									"token": g_token,
-									"roomnum": g_roomnum,
-									"role": g_role,
-									"thumbup": 0
-								});
-								getUserList();
-							}
-						); //这个是运营后台的事件
-						OnBtnOpenCamera();
-						OnBtnOpenMic();
-						OnBtnOpenPlayer();
-					}, function(errMsg) {
-						toastr.error("错误码:" + errMsg.code + " 错误信息:" + errMsg.desc);
-					}, rotate); //这个是sdk的事件
-				}
-			);
+        function(rspJson) {
+            sdk.createRoom(rspJson.data.roomnum, E_iLiveAuthBits.AuthBit_LiveMaster, "", "LiveMaster", function() {
+                toastr.success("create room succ");
+                g_role = E_Role.LiveMaster;
+                g_roomnum = rspJson.data.roomnum;
+                g_groupid = rspJson.data.groupid;
+                jsonObj = {
+                    "token": g_token,
+                    "room": {
+                        "title": '[Web随心播]' + name,
+                        "roomnum": rspJson.data.roomnum,
+                        "type": "live",
+                        "groupid": rspJson.data.groupid,
+                        "appid": g_appId,
+                        "device": 2,
+                        "videotype": 0
+                    }
+                };
+                ajaxPost(g_serverUrl + "?svc=live&cmd=reportroom", JSON.stringify(jsonObj),
+                    function(rspJson) {
+                        cb(g_roomnum);
+                        report({
+                            "token": g_token,
+                            "roomnum": g_roomnum,
+                            "role": g_role,
+                            "thumbup": 0
+                        });
+                        getUserList();
+                    }
+                ); //这个是运营后台的事件
+                OnBtnOpenCamera();
+                OnBtnOpenMic();
+                OnBtnOpenPlayer();
+            }, function(errMsg) {
+                toastr.error("错误码:" + errMsg.code + " 错误信息:" + errMsg.desc);
+            },rotate); //这个是sdk的事件
         }
     );
 }
@@ -576,50 +565,40 @@ function OnBtnJoinRoom(roomid, role, succ, err) {
         "id": g_id
     };
     ajaxPost(g_serverUrl + "?svc=live&cmd=reportmemid", JSON.stringify(jsonObj),
-        function(joinRoomRspJson) {
-            if (joinRoomRspJson.errorCode != 0) {
+        function(rspJson) {
+            if (rspJson.errorCode != 0) {
                 g_request_status = 0;
-                toastr.error("错误码:" + joinRoomRspJson.errorCode + " 错误信息:" + joinRoomRspJson.errorInfo);
+                toastr.error("错误码:" + rspJson.errorCode + " 错误信息:" + rspJson.errorInfo);
                 return;
             }
-			
-			//从业务服务器获取privateMapKey
-			var jsonObj = { "identifier": g_id, "pwd": g_pwd, "appid": g_sdkappid, "accounttype": g_accountType, "roomnum": roomid, "privMap": 255 };
-			ajaxPost(g_serverUrl + "?svc=account&cmd=authPrivMap", JSON.stringify(jsonObj),
-				function OnServerAuthPrivMap(privateMapKeyRspJson) {
-					g_userSig = privateMapKeyRspJson.data.userSig;
-					g_token = privateMapKeyRspJson.data.token;
-					var privateMapKey = privateMapKeyRspJson.data.privMapEncrypt;
-					
-					var authBits = (g_role == E_Role.LiveGuest) ? E_iLiveAuthBits.AuthBit_LiveGuest : E_iLiveAuthBits.AuthBit_Guest;
-					sdk.joinRoom(roomid, authBits, privateMapKey, g_role == E_Role.LiveGuest ? 'LiveGuest' : "Guest", function() {
-						g_request_status = 0;
-						toastr.success("join room succ");
-						g_roomnum = roomid;
-						succ();
-						SendGroupMessage({
-							"userAction": E_IM_CustomCmd.AVIMCMD_EnterLive,
-							"actionParam": ''
-						})
-						report({
-							"token": g_token,
-							"roomnum": g_roomnum,
-							"role": g_role || E_Role.Guest,
-							"thumbup": 0
-						});
-						getUserList();
-						if (role == E_Role.LiveGuest) {
-							sdk.changeRole('LiveGuest', function() {
 
-							});
-						}
-					}, function(errMsg) {
-						g_request_status = 0;
-						toastr.error("错误码:" + errMsg.code + " 错误信息:" + errMsg.desc);
-						err(errMsg);
-					});
-				}
-			);
+            var authBits = (g_role == E_Role.LiveGuest) ? E_iLiveAuthBits.AuthBit_LiveGuest : E_iLiveAuthBits.AuthBit_Guest;
+            sdk.joinRoom(roomid, authBits, "", g_role == E_Role.LiveGuest ? 'LiveGuest' : "Guest", function() {
+                g_request_status = 0;
+                toastr.success("join room succ");
+                g_roomnum = roomid;
+                succ();
+                SendGroupMessage({
+                    "userAction": E_IM_CustomCmd.AVIMCMD_EnterLive,
+                    "actionParam": ''
+                })
+                report({
+                    "token": g_token,
+                    "roomnum": g_roomnum,
+                    "role": g_role || E_Role.Guest,
+                    "thumbup": 0
+                });
+                getUserList();
+                if (role == E_Role.LiveGuest) {
+                    sdk.changeRole('LiveGuest', function() {
+
+                    });
+                }
+            }, function(errMsg) {
+                g_request_status = 0;
+                toastr.error("错误码:" + errMsg.code + " 错误信息:" + errMsg.desc);
+                err(errMsg);
+            });
         },
         function() {
             g_request_status = 0;
