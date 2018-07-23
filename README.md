@@ -6,9 +6,9 @@ iLiveSDK 提供了账号登录，音视频互动，文本互动等基础功能�
 
 ## SDK最近更新说明
 ### V1.9.0.0(2018-07-11)
-* 修改SDK内部默认通道为云上环境(**老用户需要在初始化SDK后将通道设置为IMSDK通道，否则无法与旧版本互通;云上环境进入房间的privateMapKey为必填字段**);
+* 修改SDK内部默认通道为云上环境(**老用户需要在初始化SDK后将通道设置为IMSDK通道，否则无法与旧版本互通;云上环境进入房间的privateMapKey为必填字段**)，[升级说明](https://github.com/zhaoyang21cn/iLiveSDK_Web_Suixinbo/blob/master/iLiveSDK/README.md);
 * 增加设置通道接口setChannelMode;
-* 接口修改: **创建和加入房间接口,增加参数privateMapKey**
+* 接口修改: **创建和加入房间接口,增加参数privateMapKey**;
 
 [更多版本更新信息](https://github.com/zhaoyang21cn/iLiveSDK_Web_Suixinbo/blob/master/doc/iLiveSDK_ChangeList.md)
 
