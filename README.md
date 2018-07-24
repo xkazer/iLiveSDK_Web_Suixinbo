@@ -21,7 +21,7 @@ web版随心播能够和PC、Android、IOS互通;
 [API文档](https://zhaoyang21cn.github.io/iLiveSDK_Help/web_help/)
 
 ## 错误码
-[错误码表](https://github.com/zhaoyang21cn/ILiveSDK_Android_Suixinbo/blob/master/doc/ILiveSDK/error.md)
+[错误码表](https://github.com/zhaoyang21cn/iLiveSDK_Android_LiveDemo/blob/master/doc/ILiveSDK/error.md)
 
 ## 相关知识
 [角色配置](https://www.qcloud.com/document/product/268/10620)<br/>
