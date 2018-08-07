@@ -523,6 +523,7 @@ ILiveSDK.prototype = {
             	var elem = {};
 	            elem.type = message.elems[i].type;
 	            elem.content = message.elems[i].content;
+                elem.ext = message.elems[i].ext;
 	            elems.push(elem);
             }
             msg.elems = elems;
@@ -555,7 +556,8 @@ ILiveSDK.prototype = {
 	        for (var i = 0; i < message.elems.length; ++i) {
             	var elem = {};
 	            elem.type = message.elems[i].type;
-	            elem.content = message.elems[i].content;	
+	            elem.content = message.elems[i].content;
+                elem.ext = message.elems[i].ext;
 	            elems.push(elem);
             }
 	        msg.elems = elems;
@@ -581,7 +583,7 @@ ILiveSDK.prototype = {
             var obj = JSON.parse(msg);
             elems = [];
             for (var i = 0; i < obj.elements.length; ++i) {
-                var elem = new ILiveMessageElem(obj.elements[i].type, obj.elements[i].content);
+                var elem = new ILiveMessageElem(obj.elements[i].type, obj.elements[i].content, obj.elements[i].ext);
                 elems.push(elem);
             }
             var message = new ILiveMessage(elems);
@@ -845,10 +847,16 @@ function ILiveMessage(elems) {
 * @constructor
 * @param {E_iLiveMessageElemType} type - 消息类型
 * @param {string} content - 消息内容
+* @param {string} ext - 自定义消息额外字段(仅自定义消息有效);
 */
-function ILiveMessageElem(type, content) {
+function ILiveMessageElem(type, content, ext) {
     this.type = type;
     this.content = content;
+    if(ext == undefined) {
+        this.ext = "";
+    }else {
+        this.ext = ext;
+    }
 }
 
 /**
