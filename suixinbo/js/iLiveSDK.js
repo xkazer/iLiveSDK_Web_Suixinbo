@@ -154,6 +154,14 @@ ILiveSDK.prototype = {
         }
         );
     },
+    
+    /**
+    * 设置是否进测试环境(与腾讯云后台联调时使用)。注意,必须在初始化之前调用;
+    * @param {boolean} testEnv - 是否支持IM功能;
+    */
+    setTestEnv: function (testEnv) {
+        this.ilive.setTestEnv(testEnv);
+    },
 
     /**
     * 设置通道类型。<br/>

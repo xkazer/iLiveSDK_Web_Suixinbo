@@ -1,5 +1,8 @@
 ## Web_iLiveSDK_ChangeList
 
+###### V1.9.2.0(2018-08-22)
+* 暴露进入测试环境接口
+
 ###### V1.9.1.0(2018-08-07)
 * 暴露自定义消息的ext字段;
 * setIMsupport设置true，SDK实际使用的是false，bug修正;
