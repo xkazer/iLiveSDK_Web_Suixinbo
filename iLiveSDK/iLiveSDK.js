@@ -76,7 +76,7 @@
 * @constructor
 * @throws iliveSDKObj不存在时抛出异常
 * @param {number} appid - 腾讯云分配的appid
-* @param {number} accountType - 腾讯云分配的accoutType
+* @param {number} accountType - 腾讯云分配的accoutType(后台已废弃此字段，填0即可)
 * @param {string} iliveSDK - html页面中iLiveSDK object的ID
 */
 function ILiveSDK(appid, accountType, iliveSDKObj) {
